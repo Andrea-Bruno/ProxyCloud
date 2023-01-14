@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="wwwroot\update\**" />
+	  <Content Remove="wwwroot\update\**" />
+	  <EmbeddedResource Remove="wwwroot\update\**" />
+	  <None Remove="wwwroot\update\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Compile Remove="Communication.cs" />
+		<Compile Remove="CommunicationServer.cs" />
+		<Compile Remove="MapEndpoints.cs" />
+		<Compile Remove="PairedTable.cs" />
+		<Compile Remove="Util.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\ProxyAPISupport\ProxyAPISupport.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="wwwroot\" />
+	</ItemGroup>
+
+</Project>

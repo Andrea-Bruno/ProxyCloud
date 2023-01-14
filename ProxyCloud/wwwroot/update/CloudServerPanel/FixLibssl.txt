@@ -1,0 +1,6 @@
+﻿# this commands fix the error “No usable version of libssl eas found”. Run in the terminal:
+sudo apt-get install software-properties-common
+sudo apt-add-repository -y ppa:rael-gc/rvm
+sudo apt-get update
+sudo apt-get install rvm
+sudo apt install libssl1.0-dev

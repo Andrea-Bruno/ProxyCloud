@@ -1,0 +1,209 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>SecureStorage</name>
+    </assembly>
+    <members>
+        <member name="T:SecureStorage.Cryptography">
+            <summary>
+            Class to encrypt and decrypt the data.
+            </summary>
+        </member>
+        <member name="M:SecureStorage.Cryptography.Encrypt(System.Byte[],System.Byte[])">
+            <summary>
+            Encrypt a sequence of bytes using the Bitcoin cryptographic algorithm
+            </summary>
+            <param name="clearBytes">Sequence of bytes to encrypt</param>
+            <param name="password">Key for encryption</param>
+            <returns>Encrypted bytes</returns>
+        </member>
+        <member name="M:SecureStorage.Cryptography.Decrypt(System.Byte[],System.Byte[])">
+            <summary>
+            Decrypt a sequence of encrypted data with the Encrypt function
+            </summary>
+            <param name="cipherBytes">Data to decrypt</param>
+            <param name="password">Encryption key </param>
+            <returns>Decrypted bytes</returns>
+        </member>
+        <member name="T:SecureStorage.DataStorage">
+            <summary>
+            This class has been conceived to be able to save data in a safe way, that is: The saved data of any application cannot be considered safe if it will be accessible in clear text to other applications or resident software. For encryption to be active, the library must be initialized using the Initializer class, enabling encryption (encryption is enabled by default).
+            </summary>
+        </member>
+        <member name="M:SecureStorage.DataStorage.#ctor(SecureStorage.Storage)">
+            <summary>
+            Initialized object storageusing the Initializer class, enabling encryption (encryption is enabled by default).
+            </summary>
+            <param name="secureStorage"> Storage name</param>
+        </member>
+        <member name="M:SecureStorage.DataStorage.SaveData(System.Byte[],System.String)">
+            <summary>
+            This method is used to encrypt and securely save data with their public properties.
+            </summary>
+            <param name="data"> Data to save</param>
+            <param name="key">Key used to save the Data.</param>
+        </member>
+        <member name="M:SecureStorage.DataStorage.LoadData(System.String)">
+            <summary>
+            This method is used to load a previously saved data.
+            </summary>
+            <param name="key">Key used to save data</param>
+            <returns>Saved data</returns>
+        </member>
+        <member name="M:SecureStorage.DataStorage.BinarySerialize(System.Object,System.String)">
+            <summary>
+            Serialize the object using the key.
+            </summary>
+            <param name="obj">Object to be serialized</param>
+            <param name="key">Key used to serialize the object</param>
+        </member>
+        <member name="M:SecureStorage.DataStorage.BinaryDeserialize(System.String)">
+            <summary>
+            Deserialize the binarydata to object using the key.
+            </summary>
+            <param name="key">Key used to deserialize </param>
+            <returns>object</returns>
+        </member>
+        <member name="T:SecureStorage.ObjectStorage">
+            <summary>
+            This class has been conceived to be able to save objects in a safe way, that is: The saved data of any application cannot be considered safe if it will be accessible in clear text to other applications or resident software. For encryption to be active, the library must be initialized using the Initializer class, enabling encryption (encryption is enabled by default).
+            </summary>
+        </member>
+        <member name="M:SecureStorage.ObjectStorage.#ctor(SecureStorage.Storage)">
+            <summary>
+            Initialized object storage using the Initializer class, enabling encryption (encryption is enabled by default).
+            </summary>
+            <param name="secureStorage">storage name</param>
+        </member>
+        <member name="M:SecureStorage.ObjectStorage.SaveObject(System.Object,System.String)">
+            <summary>
+            This method is used to encrypt and securely save objects with their public properties. Only public properties will be saved via serializations, so it is important that the class has a parameterless constructor for deserialization.In case the class has only parameterized constructors, it will be necessary to add an empty parameterless constructor, otherwise the deserialization fails.
+            </summary>
+            <param name="obj">Object to save</param>
+            <param name="key">Key used to save the object. This key will be used to upload the object in the future. If this parameter is omitted, then it will be automatically deduced from the Key or Id property of the employee, or the default j and y will be assigned.</param>
+            <returns>The key used to save the object</returns>
+            <exception cref="T:System.ArgumentException">Object to save</exception>
+        </member>
+        <member name="M:SecureStorage.ObjectStorage.LoadObject(System.Type,System.String,System.Boolean)">
+            <summary>
+            This method is used to load a previously saved object.
+            </summary>
+            <param name="type">The type of the object you want to load. Represents type declarations: class types, interface types, array types, value types, enumeration types, type parameters, generic type definitions, and open or closed constructed generic types</param>
+            <param name="key">The key that was used to save the object</param>
+            <param name="createIfNonexistent">Create a new instance if there is no object saved with the required key</param>
+            <returns>saved object</returns>
+            <exception cref="T:System.ArgumentException"></exception>
+        </member>
+        <member name="M:SecureStorage.ObjectStorage.GetAllKey(System.Type)">
+            <summary>
+            Get all the keys used to save a certain type of objects.
+            </summary>
+            <param name="type">The type of object whose keys you want to get</param>
+            <returns>The keys used to save the object</returns>
+        </member>
+        <member name="M:SecureStorage.ObjectStorage.GetAllObjects(System.Type)">
+            <summary>
+            Get all the save objects by the type it was saved.
+            </summary>
+            <param name="type">The type of object you want to get </param>
+            <returns>The objects by type</returns>
+        </member>
+        <member name="M:SecureStorage.ObjectStorage.DeleteObject(System.Type,System.String)">
+            <summary>
+            Delete the saved object.
+            </summary>
+            <param name="type">The type of object</param>
+            <param name="key"> The key that was used to save the object</param>
+        </member>
+        <member name="M:SecureStorage.ObjectStorage.DeleteAllObject(System.Type)">
+            <summary>
+            Delete all the object of certain type
+            </summary>
+            <param name="type">The type of the object</param>
+        </member>
+        <member name="M:SecureStorage.Storage.#ctor(System.String,System.Func{System.String,System.String},SecureStorage.Storage.SetKeyKalueSecure,System.Boolean)">
+            <summary>
+            Prepares the library for using cryptography. Before using the library, initialization is mandatory!
+            </summary>
+            <param name="domain">The domain allows you to use multiple instances of the library. Then use different domains to have multiple instances</param>
+            <param name="getSecureKeyValue">Function to get keys safely save in hardware.</param>
+            <param name="setSecureKeyValue">Secure function provided by the hardware to be able to save keys</param>
+            <param name="encrypted">Enable encryption (by default it is active and it is recommended not to delete it to keep your data safe)</param>
+        </member>
+        <member name="M:SecureStorage.Storage.Destroy">
+            <summary>
+            Delete all the directory with all the content in it.
+            </summary>
+        </member>
+        <member name="M:SecureStorage.Storage.DeleteDirectoryRecursively(System.IO.IsolatedStorage.IsolatedStorageFile,System.String)">
+            <summary>
+            Delete a specific file from a directory.
+            </summary>
+            <param name="storageFile">Name of the file to delete</param>
+            <param name="dirName">Directory Name to delete the file from it</param>
+        </member>
+        <member name="M:SecureStorage.Storage.SetKeyValue_Default(System.String,System.String)">
+            <summary>
+            Secure function provided by the hardware to be able to save keys
+            </summary>
+            <param name="key">Key to identify the users and will be used to save and delete data on the device</param>
+            <param name="value"> Encrypted Key Value</param>
+        </member>
+        <member name="T:SecureStorage.Values">
+            <summary>
+            This class is used to save in an encrypted and secure way the values, which can be used by any application that needs to store parameters, such as configuration values, flags, names, and variables that you do not want to be lost after restarting of the application
+            </summary>
+        </member>
+        <member name="M:SecureStorage.Values.Set(System.String,System.Boolean)">
+            <summary>
+            Permanently save the value of a variable, for possible use after reloading the application
+            </summary>
+            <param name="name">Name to assign to the variable</param>
+            <param name="value">The value of the variable to save </param>
+        </member>
+        <member name="M:SecureStorage.Values.Get(System.String,System.Boolean)">
+            <summary>
+            Load a previously saved value of a variable, if it has not been previously saved then the returned value will be by default indicated in the parameter
+            </summary>
+            <param name="name">The name assigned to the variable</param>
+            <param name="defaultValue">This value will be returned if the variable has never been previously saved</param>
+            <returns>The value of the previously saved variable, or the default value</returns>
+        </member>
+        <member name="M:SecureStorage.Values.Set(System.String,System.String)">
+            <inheritdoc cref="M:SecureStorage.Values.Set(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:SecureStorage.Values.Get(System.String,System.String)">
+            <inheritdoc cref="M:SecureStorage.Values.Get(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:SecureStorage.Values.Set(System.String,System.Int32)">
+            <inheritdoc cref="M:SecureStorage.Values.Set(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:SecureStorage.Values.Get(System.String,System.Int32)">
+            <inheritdoc cref="M:SecureStorage.Values.Set(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:SecureStorage.Values.Set(System.String,System.UInt32)">
+            <inheritdoc cref="M:SecureStorage.Values.Set(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:SecureStorage.Values.Get(System.String,System.UInt32)">
+            <inheritdoc cref="M:SecureStorage.Values.Get(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:SecureStorage.Values.Set(System.String,System.Int64)">
+            <inheritdoc cref="M:SecureStorage.Values.Set(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:SecureStorage.Values.Get(System.String,System.Int64)">
+            <inheritdoc cref="M:SecureStorage.Values.Get(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:SecureStorage.Values.Set(System.String,System.UInt64)">
+            <inheritdoc cref="M:SecureStorage.Values.Set(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:SecureStorage.Values.Get(System.String,System.UInt64)">
+            <inheritdoc cref="M:SecureStorage.Values.Get(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:SecureStorage.Values.Set(System.String,System.DateTime)">
+            <inheritdoc cref="M:SecureStorage.Values.Set(System.String,System.Boolean)"/>
+        </member>
+        <member name="M:SecureStorage.Values.Get(System.String,System.DateTime)">
+            <inheritdoc cref="M:SecureStorage.Values.Get(System.String,System.Boolean)"/>
+        </member>
+    </members>
+</doc>

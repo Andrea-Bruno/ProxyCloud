@@ -1,0 +1,140 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>AppSync</name>
+    </assembly>
+    <members>
+        <member name="T:AppSync.Prepare">
+            <summary>
+            Class to be used on the application development computer to generate and publish an update
+            </summary>
+        </member>
+        <member name="M:AppSync.Prepare.PublishCurrentApplication(System.String,System.String,System.String)">
+            <summary>
+            Create an update, in particular all the files of the current installation will be copied and an XML file will be added that specifies the file map with their hash. This XML file can be loaded from the device that needs updates and used to check if there are updates to be made
+            </summary>
+            <param name="uploadUrl">If specified, it generates the compressed package and sends it to the web host which makes it available for updates</param>
+            <param name="copyTo">Get the xml structure of the specified directory (ithe copy will be generated in a temporary folder and then deleted)</param>
+            <param name="publicationPath">The current file package position. Default value is the current base directory of application</param>
+            <returns>Returns the description of an error, or null if the operation was successful</returns>
+        </member>
+        <member name="T:AppSync.Update">
+            <summary>
+            Provides support for an application that wants to self-update via a private repository
+            </summary>
+        </member>
+        <member name="M:AppSync.Update.CheckAndUpdate(System.String,System.Func{System.Boolean})">
+            <summary>
+            Check if there is an update available, and if so, run the update, IsReadyForReboot
+            </summary>
+            <param name="url">Repository url where to look for the update</param>
+            <param name="isReadyForReboot">Function that returns true when restart is possible (when application is not working)</param>
+            <returns>Outcome of the operation</returns>
+        </member>
+        <member name="M:AppSync.Update.CreateLocalFileStructure">
+            <summary>
+            Create a description file of the current package which is installed on the machine and save it
+            </summary>
+            <returns>Structure in XML format</returns>
+        </member>
+        <member name="M:AppSync.Util.HashFile(System.IO.FileInfo)">
+            <summary>
+            Compute a hash for the file, without loading it into memory
+            </summary>
+            <param name="file"></param>
+            <returns></returns>
+        </member>
+        <member name="M:AppSync.Util.CreateFileStructure(System.IO.DirectoryInfo,System.IO.DirectoryInfo,System.Boolean,System.Collections.Generic.List{AppSync.HashFileInfo},System.IO.DirectoryInfo)">
+            <summary>
+            Get the cml structure of the specified directory
+            </summary>
+            <param name="dir">The root of the structure</param>
+            <param name="copyTo">If specified, it indicates that the structure must be copied to a destination directory where the repository for the installation is located</param>
+            <param name="excludeJsonFile">Is frue exclude Json File</param>
+            <param name="fileList">Internal parameter</param>
+            <param name="baseDir">Internal parameter</param>
+            <returns></returns>
+        </member>
+        <member name="M:AppSync.Util.HashStructure(System.Collections.Generic.List{AppSync.HashFileInfo})">
+            <summary>
+            An identifier of the structure of a path, useful to see if there has been a change to a file
+            </summary>
+            <param name="files"></param>
+            <returns></returns>
+        </member>
+        <member name="M:AppSync.Util.Zip(System.String,System.String)">
+            <summary>
+            Create a compressed archive file
+            </summary>
+            <param name="sourcePath"></param>
+            <param name="zipFullNameFile"></param>
+        </member>
+        <member name="M:AppSync.Util.Unzip(System.String,System.String)">
+            <summary>
+            Unpack a compressed archive file
+            </summary>
+            <param name="zipFullNameFile"></param>
+            <param name="targetPath"></param>
+        </member>
+        <member name="M:AppSync.Util.CopyFilesRecursively(System.IO.DirectoryInfo,System.IO.DirectoryInfo,System.Boolean,System.Boolean)">
+            <summary>
+            Copy the files to another directory (and rename any existing files if specified)
+            If set to rename existing files, it can overwrite files that are already open.
+            </summary>
+            <param name="source"></param>
+            <param name="target"></param>
+            <param name="renameExistingFiles">If true, rename any existing files</param>
+            <param name="move">If true, the file will be moved instead of being copied</param>
+        </member>
+        <member name="M:AppSync.Util.RenameExistingFiles(System.String)">
+            <summary>
+            Rename the file if it exists
+            </summary>
+            <param name="file">Full file name</param>
+        </member>
+        <member name="M:AppSync.Util.Restart">
+            <summary>
+            Restart current application
+            </summary>
+        </member>
+        <member name="M:AppSync.Util.GetExecutableFile">
+            <summary>
+            Returns the executable file of the current application
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:AppSync.Util.Upload(System.String,System.String)">
+            <summary>
+            Send a file to the remote host
+            </summary>
+            <param name="filename">File to be sent</param>
+            <param name="toUrl">Target Url</param>
+            <returns></returns>
+        </member>
+        <member name="T:AppSync.WebRepository">
+            <summary>
+            Support for the website to act as a repository for the app update files
+            </summary>
+        </member>
+        <member name="F:AppSync.WebRepository.IpAllowedToUpload">
+            <summary>
+            The IPs of the machines authorized to upload the application update.
+            Leave null if no machine is authorized.
+            </summary>
+        </member>
+        <member name="P:AppSync.WebRepository.ContentRootPath">
+            <summary>
+            The root location of the repository: To be set at the start of the web application
+            </summary>
+        </member>
+        <member name="M:AppSync.WebRepository.AppUpload(Microsoft.AspNetCore.Http.HttpContext)">
+            <summary>
+            Set the entry point of the web application, to upload the zipped application so that it is made available online for updates
+            In the web application you need to add the entry point in this way: endpoints.MapPost("/update", async context => await AppSync.Util.AppUpload(context));
+            Remember to enable the IPs authorized for upload by inserting them in the IpAllowedToUpload list
+            </summary>
+            <param name="context"></param>
+            <returns></returns> 
+        </member>
+    </members>
+</doc>
