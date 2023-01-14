@@ -9,6 +9,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProxyAPISupport", "ProxyAPI
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppSync", "..\..\AppSync\AppSync.csproj", "{FE1580D6-A600-4321-A138-AA816CFF664F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elementi di soluzione", "Elementi di soluzione", "{9A7F25CC-348D-4C31-BBB0-C2EC2A6A1267}"
+	ProjectSection(SolutionItems) = preProject
+		ClientHtml\CryptoCloudClientWeb.html = ClientHtml\CryptoCloudClientWeb.html
+		ClientHtml\README.md = ClientHtml\README.md
+		README.md = README.md
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		DEBUG_A|Any CPU = DEBUG_A|Any CPU
