@@ -1654,7 +1654,7 @@
                 request.onload = function () {
                     requestDone();
                     if (this.status == 421) {
-                        alertBox("status 421 = server the cloud is not logged into the proxy, please restart it");
+                        alertBox("status 421 = the cloud is not logged into the proxy, please restart it");
                     } else if (this.readyState == this.DONE && this.status == 200 && this.responseText != "") {
                         if (session.QRkey) {
                             onCommandResponse.GetEncryptedQR(this.responseText);
@@ -2961,8 +2961,8 @@
                         class="functionButton">Connect</button>
                     <script>
                         if (isDebug) { /*Set default values for the test*/
-                            //qr.value = "AajqOfum5xcWmCZ5Fd4X+RLQkjoAsA9HUraB/LxcNVlLtwACOiqpQIF/+K/pLopmGX3QE8fnIvldLn4wePUPGgz6hShLW2kKqHt8EgQwF05YaeQBBohpjuDbK/McfqM2asjXmHIMm8nx/ZB1GNJsFROVdWSrN8bRbR+QEY/c/rP9YyaZcAtSrlLQsT27w/2thgTcjXv2I19RcQjhaNXyRhITvjNPTNx5XVEVYdEh9xU8s4uOX760kZhwvAiGMar6AzW+FyMDCvYJQ2+4FUZfmeDvwsB9B5+futj/+pylsWheYU5TwVYMeSS7j/rKniIUO4E/36FVQ2O+GaIB8re+koEBAAED3A4+AuDwHxMLW9oHbGd8VW9zsYtD/fwO5gHgHi+xO3pzZXJ2ZXIuY2xvdWRzZXJ2aWNlcy5hZ2VuY3k=";
-                            //pin.value = "995036";
+                            qr.value = "";
+                            pin.value = "";
                         }
                     </script>
                 </fieldset>

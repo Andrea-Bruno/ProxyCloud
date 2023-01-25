@@ -39,12 +39,17 @@ namespace ProxyAPISupport
         /// </summary>
         /// <param name="privateKey">The key that identifies the proxy on the communications network connected to the router. Clouds to connect to the proxy must have the public key corresponding to this private key.</param>
         /// <param name="entryPoint">The web or ip address of the router (default id "localhost"). The proxy will attempt to connect to the router via this address. The value of defaylt is localhost, in which case the proxy and the router must be running on the same hardware. If the router is remote, exposed to the internet, it is advisable to use a third level domain as an entry point so as not to be bound to the router IP (if the router changes IP, just update the DNS record to get the proxy again. connected to it).</param>
-        public static void Initialize(string privateKey, string entryPoint = null)
+        /// <returns>False if it has already been initialized, otherwise true</returns>
+        public static bool Initialize(string privateKey, string entryPoint = null)
         {
+            if (IsInitialized)
+                return false;
             entryPoint ??= IPAddress.Loopback.ToString();
             Server = new CommunicationServer(privateKey, entryPoint);
             IsInitialized = true;
+            return true;
         }
+        public const int Port = 5050;
         public static bool IsInitialized { get; private set; }
 
 
@@ -85,7 +90,9 @@ namespace ProxyAPISupport
             switch (ResponseToPurpose)
             {
                 case Purpose.GetProxyAddress:
-                    SendCommand(contact, 0, ResponseToPurpose, true, true, Encoding.ASCII.GetBytes(Util.CurrentHost.ToString() ?? ""));
+                    var host = Util.CurrentHost;
+                    string hostName = host == null ? "" : host.ToString();
+                    SendCommand(contact, 0, ResponseToPurpose, true, true, Encoding.ASCII.GetBytes(hostName));
                     break;
                 case Purpose.ForwardingWithEncryptRsa256: // Paired!
                                                           // we do the Pair with the hash of the public key to not let the server know anything about the keys used (amuento security and privacy)

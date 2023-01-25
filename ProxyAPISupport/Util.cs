@@ -24,9 +24,7 @@ namespace ProxyAPISupport
             {
                 if (!Communication.IsInitialized)
                 {
-                    return "The local proxy was not initialized!" + "\r\n"
-                         + "To initialize the proxy the router must be exposed to the internet." + "\r\n"
-                         + "Fix the problem and restart the application!" + "\r\n";
+                    return "The local proxy has not started!" + "\r\n";
                 }
                 var host = CurrentHost;
 
@@ -36,10 +34,10 @@ namespace ProxyAPISupport
                     Communication.ConcurrentRequestForUser.ToList().ForEach(x => RealTimeClients += x.Key + " -> " + x.Value + "\r\n");
                 }
 
-                return "Router entry point = " + CommunicationServer.Context.EntryPoint.Host + "\r\n"
+                return "Is reachable = " + (host == null ? "undefined" : "[" + IsReachable().ToString()) + "]\r\n"
+                     + "Router entry point = " + CommunicationServer.Context.EntryPoint.Host + "\r\n"
                      + "Is connected to router = " + CommunicationServer.Context.IsConnected + "\r\n"
                      + "Host = " + host + "\r\n"
-                     + "Is reachable = " + (host == null ? "undefined" : IsReachable().ToString()) + "\r\n"
                      + "ID = " + Communication.Server.Id + "\r\n"
                      + "PubblicKey = " + Communication.Server.PubblicKey + "\r\n"
                      + "Clouds connected = " + CommunicationServer.Context.Contacts.Count + "\r\n"
@@ -66,7 +64,7 @@ namespace ProxyAPISupport
                         if (!CurrentHostFirstRead)
                         {
                             CurrentHostFirstRead = true;
-                            if (!SpinWait.SpinUntil(() => _CurrentHost != null, 10000))
+                            if (!SpinWait.SpinUntil(() => _CurrentHost != null, 2000))
                             {
                                 // ==================== WARNING: DefaultUrls is not setting at startup !!! ===================
                                 //
@@ -85,7 +83,10 @@ namespace ProxyAPISupport
                 }
                 if (_CurrentHost != null)
                     return _CurrentHost;
-                var builder = new UriBuilder("http://" + GetPublicIpAddress() + ":5050");
+                var ip = GetPublicIpAddress();
+                if (ip == null || ip == IPAddress.None)
+                    return null;
+                var builder = new UriBuilder("http://" + ip + ":" + Communication.Port);
                 return builder.Uri;
             }
         }
@@ -144,7 +145,7 @@ namespace ProxyAPISupport
                 {
                 }
             }
-            return IPAddress.None;
+            return publicIp ?? IPAddress.None;
         }
         /// <summary>
         /// Get all my IP
@@ -222,51 +223,81 @@ namespace ProxyAPISupport
             ReachableButWrongEntryPoint,
         }
 
+        private static ReachableStatus LastIsReachable;
+        private static DateTime LastIsReachableTime;
+
         public static ReachableStatus IsReachable()
         {
-            UriBuilder ub;
-            try
+            if ((DateTime.UtcNow - LastIsReachableTime).TotalMinutes > 60)
             {
-                ub = new UriBuilder(CurrentHost) { Path = "proxyinfo", Query = "ping=true" };
-            }
-            catch (Exception)
-            {
-                return ReachableStatus.WrongHostName;
-            }
-            try
-            {
-                var e = Dns.GetHostEntry(ub.Host);
-                if (e.AddressList.Length == 0)
-                    return ReachableStatus.NotSetDNS;
-                var ip = e.AddressList[0];
-                ub.Host = ip.ToString();
-                var pinger = new Ping();
-                var reply = pinger.Send(ip);
-                if (reply.Status != IPStatus.Success)
-                    return ReachableStatus.UnderFirewall;
+                LastIsReachableTime = DateTime.UtcNow;
+                IPAddress myIp;
+                UriBuilder ub;
                 try
                 {
-                    var request = (HttpWebRequest)WebRequest.Create(ub.Uri);
-                    request.Timeout = 2000;
-                    request.ReadWriteTimeout = 2000;
-                    var page = new StreamReader(((HttpWebResponse)request.GetResponse()).GetResponseStream()).ReadToEnd();
-                    return (page == "ok") ? ReachableStatus.Reachable : ReachableStatus.UnexpectedResponse;
+                    myIp = GetPublicIpAddress();
+                    ub = new UriBuilder(CurrentHost) { Path = "proxyinfo", Query = "ping=true" };
+                    ub.Port = Communication.Port;
+                    var hostIp = Dns.GetHostAddresses(ub.Host);
+                    if (!hostIp.Contains(myIp))
+                    {
+                        LastIsReachable = ReachableStatus.WrongHostName;
+                        return LastIsReachable;
+                    }
+                    var e = Dns.GetHostEntry(ub.Host);
+                    if (e.AddressList.Length == 0)
+                    {
+                        LastIsReachable = ReachableStatus.NotSetDNS;
+                        return LastIsReachable;
+                    }
+                    var ip = e.AddressList[0];
+                    ub.Host = ip.ToString();
+                    var pinger = new Ping();
+                    var reply = pinger.Send(ip);
+                    if (reply.Status != IPStatus.Success)
+                    {
+                        LastIsReachable = ReachableStatus.UnderFirewall;
+                        return LastIsReachable;
+                    }
+                    try
+                    {
+                        LastIsReachable = CheckUri(ub.Uri) ? ReachableStatus.Reachable : ReachableStatus.UnexpectedResponse;
+                        return LastIsReachable;
+                    }
+                    catch (Exception)
+                    {
+                        try
+                        {
+                            if (ub.Host != myIp.ToString())
+                            {
+                                ub.Host = myIp.ToString();
+                                LastIsReachable = CheckUri(ub.Uri) ? ReachableStatus.ReachableButWrongEntryPoint : ReachableStatus.UnexpectedResponse;
+                                return LastIsReachable;
+                            }
+                        }
+                        catch (Exception)
+                        {
+                        }
+                        ub.Host = IPAddress.Loopback.ToString();
+                        LastIsReachable = CheckUri(ub.Uri) ? ReachableStatus.UnderFirewall : ReachableStatus.UnexpectedResponse;
+                        return LastIsReachable;
+                    }
                 }
                 catch (Exception)
                 {
-                    var myIp = GetPublicIpAddress();
-                    ub.Host = myIp.ToString();
-                    var request = (HttpWebRequest)WebRequest.Create(ub.Uri);
-                    request.Timeout = 1000;
-                    request.ReadWriteTimeout = 1000;
-                    var page = new StreamReader(((HttpWebResponse)request.GetResponse()).GetResponseStream()).ReadToEnd();
-                    return (page == "ok") ? ReachableStatus.ReachableButWrongEntryPoint : ReachableStatus.UnexpectedResponse;
+                    LastIsReachable = ReachableStatus.ConnectivityError;
                 }
             }
-            catch (Exception)
-            {
-                return ReachableStatus.ConnectivityError;
-            }
+            return LastIsReachable;
+        }
+        static private bool CheckUri(Uri uri)
+        {
+            var timeout = 1000;
+            var request = (HttpWebRequest)WebRequest.Create(uri);
+            request.Timeout = timeout;
+            request.ReadWriteTimeout = timeout;
+            var page = new StreamReader(((HttpWebResponse)request.GetResponse()).GetResponseStream()).ReadToEnd();
+            return page == "ok";
         }
 
         /// <summary>

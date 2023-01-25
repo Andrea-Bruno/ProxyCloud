@@ -19,7 +19,7 @@ namespace ProxyAPISupport
 
         private readonly Timer DailySave;
 
-        private void AutoSave(object? state)
+        private void AutoSave(object state)
         {
             Save();
         }
@@ -46,7 +46,7 @@ namespace ProxyAPISupport
             public ulong correspondingId;
             public DateTime LastUsage;
         }
-        private static string AppData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppDomain.CurrentDomain.FriendlyName, nameof(ProxyAPISupport));
+        private static string AppData => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), nameof(ProxyAPISupport));
         private string PairedTableFile => Path.Combine(AppData, Name + ".bin");
         private readonly string Name;
         private const int RemoveAfterInusageDays = 365;
