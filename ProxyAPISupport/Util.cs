@@ -45,7 +45,7 @@ namespace ProxyAPISupport
                      + "Answer counter = " + Communication.AnswerFromDeviceCounter + "\r\n"
                      + "Current concurent request = " + Communication.RequestConcurent + " (max " + Communication.MaxRequestConcurent + ")\r\n"
                      + "Last request saturaion = " + (Communication.LastRequestSaturation == default ? "never (ok)" : Communication.LastRequestSaturation.ToString("G")) + "\r\n"
-                     + "Last client over request = " + (Communication.LastClientOverRequest == default ? "never (ok)" : (DateTime.UtcNow - Communication.LastClientOverRequest).ToString("G") + " ago") + "\r\n"
+                     + "Last client over request = " + (Communication.LastClientOverRequest == default ? "never (ok)" : Communication.LastClientOverRequest.ToString("G")) + "\r\n"
                      + RealTimeClients
                      ;
             }

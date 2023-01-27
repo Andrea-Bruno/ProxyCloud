@@ -2629,6 +2629,9 @@
 
     <!--Initialization functions that are performed when the browser is started-->
     <script>
+        window.onbeforeunload = function () {
+            return 'Navigating the page will cause malfunction, do you really want that?';
+        };
         var privateKey;// This key is generated in the browser, it is used to decrypt the data sent by the device. This key never leaves the browser, and the JavaScript code in source format is proof that no one has access to the communication between device and browser!
         var publicKey; // Generated in the browser, it is scanned by the device with the QR code and used to encrypt the data from the device to the browser without intermediaries
         var cryptoKey // Object used for encrypt/decrypt
