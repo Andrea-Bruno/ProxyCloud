@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -306,15 +307,15 @@ namespace ProxyAPISupport
         public static Exception LastSelfTestDataPostResult { get; private set; }
         /// <summary>
         /// Runs a self-diagnosis test to see if there are any problems using the proxy bees from the internet.
+        /// It can throw an error indicating the problem you are having.
         /// </summary>
-        /// <returns>Risultato del test di autodiagnosi</returns>
-        public static async Task<Exception> SelfTestDataPostError()
+        public static void SelfTestDataPost()
         {
             try
             {
                 LastSelfTestDataPostResult = null;
                 if (!Communication.IsInitialized)
-                    return new Exception("The proxy for the API was not initialized");
+                    throw new Exception("The proxy for the API was not initialized");
 
                 var rnd = new Random();
                 var rb = new byte[128];
@@ -339,33 +340,52 @@ namespace ProxyAPISupport
                             }
                         }
                         if (!found)
-                            return new Exception("The endpoint for the proxy on port " + proxyPort + " has not been mapped");
+                            throw new Exception("The endpoint for the proxy on port " + proxyPort + " has not been mapped");
                     }
                 }
-
 
                 var e = Dns.GetHostEntry(ub.Host);
                 var ip = e.AddressList[0];
                 ub.Host = ip.ToString();
-                var client = new HttpClient
-                {
-                    Timeout = TimeSpan.FromSeconds(3)
-                };
-                var cts = new CancellationTokenSource();
-                cts.CancelAfter(client.Timeout.Milliseconds);
-                using var response = await client.PostAsync(ub.Uri, null, cts.Token).ConfigureAwait(false);
-                using var content = response.Content;
-                var data = await content.ReadAsStringAsync();
-                var dataBin = data.Base64ToBytes();
+
+
+
+                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ub.Uri.ToString());
+                request.Timeout= 2000;
+                request.Method = "POST";
+                request.ContentType = "application/x-www-form-urlencoded";
+                byte[] bytes = Array.Empty<byte>(); 
+                request.ContentLength = bytes.Length;
+                Stream requestStream = request.GetRequestStream();
+                requestStream.Write(bytes, 0, bytes.Length);
+                WebResponse response = request.GetResponse();
+                Stream stream = response.GetResponseStream();
+                StreamReader reader = new StreamReader(stream);
+                var result = reader.ReadToEnd();
+                var dataBin = result.Base64ToBytes();
                 var h2 = dataBin.ToHex();
                 LastSelfTestDataPostResult = h == h2 ? null : new Exception("Response with unexpected data");
+
+                //var client = new HttpClient
+                //{
+                //    Timeout = TimeSpan.FromSeconds(3)
+                //};
+                //var cts = new CancellationTokenSource();
+                //cts.CancelAfter(2000);
+                //using var response = client.PostAsync(ub.Uri, null, cts.Token).Result;
+                //using var content = response.Content;
+                //var data = content.ReadAsStringAsync().Result;
+                
+                //var dataBin = data.Base64ToBytes();
+                //var h2 = dataBin.ToHex();
+                //LastSelfTestDataPostResult = h == h2 ? null : new Exception("Response with unexpected data");
             }
             catch (Exception ex)
             {
                 LastSelfTestDataPostResult = new Exception(ex.Message); // remove the stack trace
                 Debug.WriteLine(ex);
             }
-            return LastSelfTestDataPostResult;
+            throw LastSelfTestDataPostResult;
         }
     }
 }
