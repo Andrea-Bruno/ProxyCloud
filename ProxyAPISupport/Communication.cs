@@ -148,62 +148,81 @@ namespace ProxyAPISupport
         public static int RequestToDevice(ulong chatId, ulong fromClientId, Purpose purpose, byte[] data, out CommandForClient response, string ip = null, string? userAgent = null)
         {
             RequestToDeviceCounter++;
-            int statusCode;
+            int statusCode = StatusCodes.Status200OK;
             response = null;
             var contact = CommunicationServer.Context.Contacts.GetContact(chatId);
             if (contact == null)
                 return StatusCodes.Status421MisdirectedRequest;
             RequestConcurent++;
-            if (RequestConcurent > MaxRequestConcurent)
+            try
             {
-                LastRequestSaturation = DateTime.UtcNow;
-                statusCode = StatusCodes.Status503ServiceUnavailable;
-            }
-            else
-            {
-                ConcurrentRequestForUser.TryGetValue(chatId, out var counterConcurentRequestForUser);
-                counterConcurentRequestForUser++;
-                ConcurrentRequestForUser[chatId] = counterConcurentRequestForUser;
-                if (counterConcurentRequestForUser > MaxConcurrentRequestForUser)
+                if (RequestConcurent > MaxRequestConcurent)
                 {
-                    LastClientOverRequest = DateTime.UtcNow;
-                    statusCode = StatusCodes.Status429TooManyRequests;
+                    LastRequestSaturation = DateTime.UtcNow;
+                    statusCode = StatusCodes.Status503ServiceUnavailable;
                 }
                 else
                 {
                     lock (contact)
                     {
-                        if (contact.Session.ContainsKey("response"))
-                            contact.Session.Remove("response");
-                        if (ip != null && userAgent != null)
-                            SendCommand(contact, fromClientId, purpose, true, true, data, Encoding.ASCII.GetBytes(ip), Encoding.ASCII.GetBytes(userAgent));
-                        else
-                            SendCommand(contact, fromClientId, purpose, true, true, data);
-                        if (contact.Session.ContainsKey("semaphore"))
-                            contact.Session.Remove("semaphore");
-                        var semaphore = new SemaphoreSlim(0, 1);
-                        contact.Session.Add("semaphore", semaphore);
-                        var limitMbps = 0.01; // minimun neetwork speed
-                        var mb = (data == null ? 0 : data.Length) / (double)1000000;
-                        var sec = mb / limitMbps;
-                        semaphore.Wait(30000 + Convert.ToInt32(sec * 1000)); // Wait for a response with a timeout of 10000 ms + time the time it takes to send data at the limitMbps
-                        if (contact.Session.TryGetValue("response", out var responseObject))
+                        ConcurrentRequestForUser.TryGetValue(chatId, out var counterConcurentRequestForUser);
+                        lock (ConcurrentRequestForUser)
                         {
-                            AnswerFromDeviceCounter++;
-                            response = (CommandForClient)responseObject;
-                            if (response == null)
-                                statusCode = StatusCodes.Status500InternalServerError;
-                            else
-                            {
-                                contact.Session.Remove("response");
-                                statusCode = StatusCodes.Status200OK;
-                            }
+                            counterConcurentRequestForUser++;
+                            if (ConcurrentRequestForUser.ContainsKey(chatId))
+                                ConcurrentRequestForUser.Remove(chatId);
+                            ConcurrentRequestForUser.Add(chatId, counterConcurentRequestForUser);
+                        }
+                        if (counterConcurentRequestForUser > MaxConcurrentRequestForUser)
+                        {
+                            LastClientOverRequest = DateTime.UtcNow;
+                            statusCode = StatusCodes.Status429TooManyRequests;
                         }
                         else
-                            statusCode = StatusCodes.Status504GatewayTimeout; // Cloud is of or not connected
+                        {
+                            if (contact.Session.ContainsKey("response"))
+                                contact.Session.Remove("response");
+                            if (ip != null && userAgent != null)
+                                SendCommand(contact, fromClientId, purpose, true, true, data, Encoding.ASCII.GetBytes(ip), Encoding.ASCII.GetBytes(userAgent));
+                            else
+                                SendCommand(contact, fromClientId, purpose, true, true, data);
+                            if (contact.Session.ContainsKey("semaphore"))
+                                contact.Session.Remove("semaphore");
+                            var semaphore = new SemaphoreSlim(0, 1);
+                            contact.Session.Add("semaphore", semaphore);
+                            var limitMbps = 0.01; // minimun neetwork speed
+                            var mb = (data == null ? 0 : data.Length) / (double)1000000;
+                            var sec = mb / limitMbps;
+                            semaphore.Wait(30000 + Convert.ToInt32(sec * 1000)); // Wait for a response with a timeout of 10000 ms + time the time it takes to send data at the limitMbps
+                            if (contact.Session.TryGetValue("response", out var responseObject))
+                            {
+                                AnswerFromDeviceCounter++;
+                                response = (CommandForClient)responseObject;
+                                if (response == null)
+                                    statusCode = StatusCodes.Status500InternalServerError;
+                                else
+                                {
+                                    contact.Session.Remove("response");
+                                    statusCode = StatusCodes.Status200OK;
+                                }
+                            }
+                            else
+                                statusCode = StatusCodes.Status504GatewayTimeout; // Cloud is of or not connected
+                        }
+                    }
+                    lock (ConcurrentRequestForUser)
+                    {
+                        ConcurrentRequestForUser.TryGetValue(chatId, out var counterConcurentRequestForUser);
+                        counterConcurentRequestForUser--;
+                        if (ConcurrentRequestForUser.ContainsKey(chatId))
+                            ConcurrentRequestForUser.Remove(chatId);
+                        ConcurrentRequestForUser.Add(chatId, counterConcurentRequestForUser);
                     }
                 }
-                ConcurrentRequestForUser[chatId]--;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.ToString());
             }
             RequestConcurent--;
             return statusCode;

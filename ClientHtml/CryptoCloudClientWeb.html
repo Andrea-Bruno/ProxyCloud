@@ -1653,7 +1653,10 @@
                 request.ontimeout = onResponseError;
                 request.onload = function () {
                     requestDone();
-                    if (this.status == 421) {
+                    if (this.status == 404) {
+                        alertBox("status 404 = cloud not found by sid: No cloud with this User ID has registered in the proxy");
+                    }
+                    else if (this.status == 421) {
                         alertBox("status 421 = the cloud is not logged into the proxy, please restart it");
                     } else if (this.readyState == this.DONE && this.status == 200 && this.responseText != "") {
                         if (session.QRkey) {
