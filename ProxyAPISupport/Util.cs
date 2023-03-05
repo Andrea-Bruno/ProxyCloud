@@ -136,13 +136,13 @@ namespace ProxyAPISupport
             {
                 publicIp = IPAddress.Parse(new WebClient().DownloadString("https://ipinfo.io/ip"));
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 try
                 {
                     publicIp = IPAddress.Parse(new WebClient().DownloadString("http://icanhazip.com").Replace("\\r\\n", "").Replace("\\n", "").Trim());
                 }
-                catch (Exception ex2)
+                catch (Exception)
                 {
                 }
             }
