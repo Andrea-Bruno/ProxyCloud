@@ -767,6 +767,7 @@
                 beepSound.play();
             }
             catch (err) {
+                console.clear();
             }
         }
 
@@ -2518,10 +2519,14 @@
 
         async function onQrCodeAcquires(qrCode, sessionId) {
             // Reset the type of encryption (this will be communicated by the server)
-
             await NewSession(sessionId);
+            let qr;
+            try {
+                qr = base64ToBuffer(qrCode);
+            } catch (exceptionVar) {
+                alertBox("Wrong QR code!")
+            }
 
-            let qr = base64ToBuffer(qrCode);
             let offset = 0;
             let type = new Uint8Array(qr.slice(offset, 1))[0];
             offset += 1;
@@ -2962,7 +2967,7 @@
                     <!--<input id="pin" type="password" value="">-->
                     <input id="pin" type="password" value="">
                     <!--The server has protection against brute force attacks, it is not allowed to make attempts in less than 5 seconds, so you must disable the button this period or more-->
-                    <button id="connect" onclick="this.disabled = true; setTimeout(() => this.disabled = false, 30000) // 30 sec. is the timeout on proxy site for answare;
+                    <button type="button" id="connect" onclick="this.disabled = true; setTimeout(() => this.disabled = false, 30000) // 30 sec. is the timeout on proxy site for answare;
                         ; onQrCodeAcquires(document.getElementById('qr').value);"
                         class="functionButton">Connect</button>
                     <script>

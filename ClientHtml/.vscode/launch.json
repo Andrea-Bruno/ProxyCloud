@@ -7,30 +7,30 @@
         {
             "type": "msedge",
             "request": "launch",
-            "name": "Open CryptoCloudClient.html",
+            "name": "Open CryptoCloudClientWeb.html",
             "file": ".\\CryptoCloudClientWeb.html"
         },
         {
-            "type": "pwa-msedge",
+            "type": "msedge",
             "name": "Launch Microsoft Edge",
             "request": "launch",
             "runtimeArgs": [
                 "--remote-debugging-port=9222"
             ],
-            "url": "./CryptoCloudClient.html", // Provide your project's url to finish configuring
+            "url": "./CryptoCloudClientWeb.html", // Provide your project's url to finish configuring
             "presentation": {
                 "hidden": true
             }
         },
         {
-            "type": "pwa-msedge",
+            "type": "msedge",
             "name": "Launch Microsoft Edge in headless mode",
             "request": "launch",
             "runtimeArgs": [
                 "--headless",
                 "--remote-debugging-port=9222"
             ],
-            "url": "./CryptoCloudClient.html", // Provide your project's url to finish configuring
+            "url": "./CryptoCloudClientWeb.html", // Provide your project's url to finish configuring
             "presentation": {
                 "hidden": true
             }
@@ -39,7 +39,7 @@
             "type": "vscode-edge-devtools.debug",
             "name": "Open Edge DevTools",
             "request": "attach",
-            "url": "./CryptoCloudClient.html", // Provide your project's url to finish configuring
+            "url": "./CryptoCloudClientWeb.html", // Provide your project's url to finish configuring
             "presentation": {
                 "hidden": true
             }

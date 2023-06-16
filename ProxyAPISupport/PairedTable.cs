@@ -103,18 +103,15 @@ namespace ProxyAPISupport
 
         private void SavePair(ulong referenceId, ulong correspondingId, DateTime lastUsage, string file = null)
         {
-            if (file == null)
-                file = PairedTableFile;
+            file ??= PairedTableFile;
             lock (ReferenceIdToCorrespondingId)
             {
                 ReferenceIdToCorrespondingId[referenceId] = new Couple { correspondingId = correspondingId, LastUsage = DateTime.UtcNow };
-                using (var writer = File.OpenWrite(file))
-                {
-                    writer.Position = writer.Length; //append
-                    writer.Write(BitConverter.GetBytes(referenceId), 0, 8);
-                    writer.Write(BitConverter.GetBytes(correspondingId), 0, 8);
-                    writer.Write(BitConverter.GetBytes(lastUsage.Ticks), 0, 8);
-                }
+                using var writer = File.OpenWrite(file);
+                writer.Position = writer.Length; //append
+                writer.Write(BitConverter.GetBytes(referenceId), 0, 8);
+                writer.Write(BitConverter.GetBytes(correspondingId), 0, 8);
+                writer.Write(BitConverter.GetBytes(lastUsage.Ticks), 0, 8);
             }
         }
     }

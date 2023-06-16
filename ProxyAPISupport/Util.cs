@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using NBitcoin;
 
 namespace ProxyAPISupport
 {
@@ -98,7 +99,7 @@ namespace ProxyAPISupport
         /// <param name="uri"></param>
         public static void SetCurrentHost(Uri uri)
         {
-            _CurrentHost = uri;
+            SetHostAndReplaceIp(uri);
         }
         /// <summary>
         /// Set the domain and the proxy to make it available to clients (this information will be inserted in the QR code)
@@ -107,7 +108,45 @@ namespace ProxyAPISupport
         public static void SetCurrentHost(HttpContext context)
         {
             if (_CurrentHost == null)
-                _CurrentHost = new Uri((context.Request.IsHttps ? "https://" : "http://") + context.Request.Host);
+                SetHostAndReplaceIp(new Uri((context.Request.IsHttps ? "https://" : "http://") + context.Request.Host));
+        }
+
+        /// <summary>
+        /// If the uri in IP format is a known domain name (the default one), replace it with the domain in order to have a dynamic entry point (that can change ip)
+        /// </summary>
+        /// <param name="uri"></param>
+        private static void SetHostAndReplaceIp(Uri uri)
+        {
+            // Check if is IP
+            if (IPAddress.TryParse(uri.Host, out var ip))
+            {
+                // Check if the IP corresponds to a known domain by default, in this case replace the ip with the domain name in order to have a dynamic entry point (which can change ip)
+                var newUri = new UriBuilder(uri)
+                {
+                    Host = IpToDomain("proxy.cloudservices.agency", ip)
+                };
+                _CurrentHost = newUri.Uri;
+            }
+            else
+            {
+                _CurrentHost = uri;
+            }
+        }
+
+        static private string IpToDomain(string domain, IPAddress ip)
+        {
+            try
+            {
+                var hostIp = Dns.GetHostAddresses(domain);
+                if (hostIp.FirstOrDefault(x => x == ip) != null)
+                {
+                    return domain;
+                }
+            }
+            catch (Exception)
+            {
+            }
+            return ip.ToString();
         }
 
         /// <summary>
@@ -343,18 +382,17 @@ namespace ProxyAPISupport
                             throw new Exception("The endpoint for the proxy on port " + proxyPort + " has not been mapped");
                     }
                 }
-
-                var e = Dns.GetHostEntry(ub.Host);
-                var ip = e.AddressList[0];
-                ub.Host = ip.ToString();
-
-
-
+                if (!IPAddress.TryParse(ub.Host, out _))
+                {
+                    var e = Dns.GetHostEntry(ub.Host);
+                    var ip = e.AddressList[0];
+                    ub.Host = ip.ToString();
+                }
                 HttpWebRequest request = (HttpWebRequest)WebRequest.Create(ub.Uri.ToString());
-                request.Timeout= 2000;
+                request.Timeout = 4000;
                 request.Method = "POST";
                 request.ContentType = "application/x-www-form-urlencoded";
-                byte[] bytes = Array.Empty<byte>(); 
+                byte[] bytes = Array.Empty<byte>();
                 request.ContentLength = bytes.Length;
                 Stream requestStream = request.GetRequestStream();
                 requestStream.Write(bytes, 0, bytes.Length);
@@ -364,7 +402,7 @@ namespace ProxyAPISupport
                 var result = reader.ReadToEnd();
                 var dataBin = result.Base64ToBytes();
                 var h2 = dataBin.ToHex();
-                LastSelfTestDataPostResult = h == h2 ? null : new Exception("Response with unexpected data");
+                LastSelfTestDataPostResult = string.Compare(h, h2, false) == 0 ? null : new Exception("Response with unexpected data");
 
                 //var client = new HttpClient
                 //{
@@ -375,7 +413,7 @@ namespace ProxyAPISupport
                 //using var response = client.PostAsync(ub.Uri, null, cts.Token).Result;
                 //using var content = response.Content;
                 //var data = content.ReadAsStringAsync().Result;
-                
+
                 //var dataBin = data.Base64ToBytes();
                 //var h2 = dataBin.ToHex();
                 //LastSelfTestDataPostResult = h == h2 ? null : new Exception("Response with unexpected data");
@@ -385,7 +423,8 @@ namespace ProxyAPISupport
                 LastSelfTestDataPostResult = new Exception(ex.Message); // remove the stack trace
                 Debug.WriteLine(ex);
             }
-            throw LastSelfTestDataPostResult;
+            if (LastSelfTestDataPostResult != null)
+                throw LastSelfTestDataPostResult;
         }
     }
 }
