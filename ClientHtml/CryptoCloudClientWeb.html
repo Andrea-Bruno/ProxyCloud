@@ -1642,7 +1642,7 @@
                     url += "&purpose=" + purpose; // SetClient Parameter is used only in debug that indicates whether a public encryption key is sent to the device. In releise the key is never sent it must be scanned by QR code
                 }
                 function onResponseError() {
-                    debugger; //is status is 0, enable CORS in the server side: https://learn.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-6.0
+                    debugger; //if status is 0, enable CORS in the server side: https://learn.microsoft.com/en-us/aspnet/core/security/cors?view=aspnetcore-6.0
                     alertBox("HTTP Request error " + this.status);
                     requestDone();
                 }

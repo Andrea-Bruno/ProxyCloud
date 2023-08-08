@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using EncryptedMessaging;
 using Microsoft.AspNetCore.Http;
 
 namespace ProxyAPISupport
@@ -102,7 +103,8 @@ namespace ProxyAPISupport
                 if (context.Request.Query.TryGetValue("sid", out var sid)) // server Id (8 bit hash of server public key)
                 {
                     var serverId = BitConverter.ToUInt64(sid[0].HexToBytes(), 0);
-                    chatId = Communication.UserIdToChatId.GetCorrespondingId(serverId);
+                    chatId = ContactConverter.UserIdsToChatId(new ulong[] { serverId, CommunicationServer.Context.My.Id });
+                    // chatId = Communication.UserIdToChatId.GetCorrespondingId(serverId);
                 }
                 else
                 {

@@ -53,7 +53,7 @@ namespace ProxyAPISupport
         public static bool IsInitialized { get; private set; }
 
 
-        internal static readonly PairedTable UserIdToChatId = new("UserIdToChatId");
+        // internal static readonly PairedTable UserIdToChatId = new("UserIdToChatId");
         internal static readonly PairedTable ClientIdToChatId = new("ClientIdToChatId");
 
         /// <summary>

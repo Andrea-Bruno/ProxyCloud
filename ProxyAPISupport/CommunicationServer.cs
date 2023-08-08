@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Net.NetworkInformation;
 using System.Text;
 using EncryptedMessaging;
 
@@ -40,7 +39,7 @@ namespace ProxyAPISupport
         {
             if (contact.UserId != null)
             {
-                Communication.UserIdToChatId.AddPair((ulong)contact.UserId, contact.ChatId);
+                // Communication.UserIdToChatId.AddPair((ulong)contact.UserId, contact.ChatId);
             }
         }
 

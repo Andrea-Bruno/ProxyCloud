@@ -4,14 +4,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
-using NBitcoin;
 
 namespace ProxyAPISupport
 {
@@ -43,6 +39,7 @@ namespace ProxyAPISupport
                      + "ID = " + Communication.Server.Id + "\r\n"
                      + "PubblicKey = " + Communication.Server.PubblicKey + "\r\n"
                      + "Clouds connected = " + CommunicationServer.Context.Contacts.Count + "\r\n"
+                     + "Clients paired = " + Communication.ClientIdToChatId.Paired + "\r\n"
                      + "Request counter = " + Communication.RequestToDeviceCounter + "\r\n"
                      + "Answer counter = " + Communication.AnswerFromDeviceCounter + "\r\n"
                      + "Current concurent request = " + Communication.RequestConcurent + " (max " + Communication.MaxRequestConcurent + ")\r\n"

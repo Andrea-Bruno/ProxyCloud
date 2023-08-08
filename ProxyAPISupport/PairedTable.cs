@@ -41,6 +41,8 @@ namespace ProxyAPISupport
 
         private readonly Dictionary<ulong, Couple> ReferenceIdToCorrespondingId = new();
 
+        public int Paired => ReferenceIdToCorrespondingId.Count;
+
         private struct Couple
         {
             public ulong correspondingId;
