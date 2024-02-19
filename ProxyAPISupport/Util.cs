@@ -120,7 +120,7 @@ namespace ProxyAPISupport
                 // Check if the IP corresponds to a known domain by default, in this case replace the ip with the domain name in order to have a dynamic entry point (which can change ip)
                 var newUri = new UriBuilder(uri)
                 {
-                    Host = IpToDomain("proxy.cloudservices.agency", ip)
+                    Host = IpToDomain("proxy.tc0.it", ip)
                 };
                 _CurrentHost = newUri.Uri;
             }
