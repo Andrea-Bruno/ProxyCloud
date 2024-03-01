@@ -63,8 +63,8 @@ namespace ProxyAPISupport
             }
             else if (context.Request.Query.TryGetValue("cid", out var cid))
             {
-                var idbytes = cid[0].HexToBytes();
-                var clientId = BitConverter.ToUInt64(idbytes, 0);
+                var idBytes = cid[0].HexToBytes();
+                var clientId = BitConverter.ToUInt64(idBytes, 0);
                 if (Communication.GetPushNotification(clientId, out var pushNotification))
                 {
                     await SetResponse(context, pushNotification);
