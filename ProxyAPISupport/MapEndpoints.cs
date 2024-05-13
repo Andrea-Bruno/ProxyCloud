@@ -23,6 +23,11 @@ namespace ProxyAPISupport
                 context.Response.StatusCode = StatusCodes.Status200OK;
                 await context.Response.WriteAsync("ok");
             }
+            if (context.Request.Query.TryGetValue("qr", out var _))
+            {
+                //context.Response.StatusCode = StatusCodes.Status200OK;
+                //await context.Response.WriteAsync("ok");
+            }
             else
             {
                 Util.SetCurrentHost(context);
