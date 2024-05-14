@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -23,10 +24,12 @@ namespace ProxyAPISupport
                 context.Response.StatusCode = StatusCodes.Status200OK;
                 await context.Response.WriteAsync("ok");
             }
-            if (context.Request.Query.TryGetValue("qr", out var _))
+            else if (context.Request.Query.TryGetValue("qr", out var _))
             {
-                //context.Response.StatusCode = StatusCodes.Status200OK;
-                //await context.Response.WriteAsync("ok");
+                var browserUrl = "https://raw.githubusercontent.com/Andrea-Bruno/ProxyCloud/master/ClientHtml/CryptoCloudClientWeb.html";
+                var wc = new WebClient();
+                string html = wc.DownloadString(browserUrl);
+                await context.Response.WriteAsync(html);
             }
             else
             {

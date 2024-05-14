@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -963,7 +963,7 @@
 
         async function LoadClient(id) {
             let json = localStorage.getItem(id);
-            if (json != 'null') {
+            if (json != null) {
                 session = JSON.parse(json);
                 await entryPointToProxy(session.entryPoint);
                 if (session.encryptionType = "aes") {
@@ -2539,7 +2539,6 @@
                 let serverPublicKey = qr.slice(offset, offset + 33);
                 offset += 33;
                 session.entryPoint = bufferToString(qr.slice(offset)); // proxy            
-                // entryPoint = "server.cloudservices.agency";
                 await entryPointToProxy(session.entryPoint);
                 hash256(serverPublicKey).then(hash => {
                     session.serverId = bufferToHex(hash.slice(0, 8));
@@ -2554,7 +2553,6 @@
                 session.serverId = bufferToHex(qr.slice(offset, offset + 8));
                 offset += 8;
                 session.entryPoint = bufferToString(qr.slice(offset)); // proxy                    
-                // entryPoint = "server.cloudservices.agency";
                 await entryPointToProxy(session.entryPoint);
                 executeRequest(command.GetEncryptedQR)
             } else {
@@ -2564,9 +2562,9 @@
 
         async function entryPointToProxy(ep) {
             if (ep == null || ep == "") {
-                ep = "server.cloudservices.agency";
+                ep = "server.tc0.it";
             } else if (ep.indexOf(".") == -1) {
-                ep = ep + ".cloudservices.agency";
+                ep = ep + ".tc0.it";
             }
             let json = await resolveDNS(ep);
             if (json.Answer && json.Answer.length > 0) {
@@ -2640,6 +2638,8 @@
         window.onbeforeunload = function () {
             return 'Navigating the page will cause malfunction, do you really want that?';
         };
+        const urlParams = new URLSearchParams(window.location.search);
+        var queryQr = urlParams.get('qr')
         var privateKey;// This key is generated in the browser, it is used to decrypt the data sent by the device. This key never leaves the browser, and the JavaScript code in source format is proof that no one has access to the communication between device and browser!
         var publicKey; // Generated in the browser, it is scanned by the device with the QR code and used to encrypt the data from the device to the browser without intermediaries
         var cryptoKey // Object used for encrypt/decrypt
@@ -2666,7 +2666,7 @@
             IV: null,
             QRkey: null, // Key added in the QR code type 2 implementation, it is used to decrypt the QR code data sent via proxy
         }
-        var proxy = "http://proxy.cloudservices.agency:" + defaultProxyPort;
+        var proxy = "http://proxy.tc0.it:" + defaultProxyPort;
         var pendingFiles = []; // dictionary for progress bars of download operations
         if (isDebug) {
             proxy = "https://localhost:7060";
@@ -2955,10 +2955,12 @@
             <section id="content" class="content">
 
                 <fieldset>
+
                     <legend>QR</legend>
                     <label for="qr">QR code on cloud</label>
                     <!--<input id="qr" type="text" value="">-->
                     <input id="qr" type="text" value="">
+
                     <label for="pin">Pin</label>
                     <!--<input id="pin" type="password" value="">-->
                     <input id="pin" type="password" value="">
@@ -2970,6 +2972,10 @@
                         if (isDebug) { /*Set default values for the test*/
                             qr.value = "";
                             pin.value = "";
+                        }
+                        if (queryQr != null) {
+                            qr.value = queryQr;
+                            qr.readOnly = true;
                         }
                     </script>
                 </fieldset>
