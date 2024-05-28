@@ -1657,6 +1657,9 @@
                     if (this.status == 404) {
                         alertBox("status 404 = cloud not found by sid: No cloud with this User ID has registered in the proxy");
                     }
+                    else if (this.status == 503) {
+                        alertBox("status 503 = Max request concurent");
+                    }
                     else if (this.status == 421) {
                         alertBox("status 421 = the cloud is not logged into the proxy, please restart it");
                     } else if (this.readyState == this.DONE && this.status == 200 && this.responseText != "") {
@@ -1839,7 +1842,7 @@
                 content.innerHTML = "";
                 setCloudPath(bufferToString(params[0]))
                 document.getElementById("createDir").disabled = false;
-                document.getElementById("getFavorities").disabled = false;
+                document.getElementById("getFavorites").disabled = false;
                 let jsonObject = JSON.parse(bufferToString(params[1]));
                 jsonObject.forEach(addFile);
                 updateButtonsStatus();
@@ -2432,7 +2435,7 @@
             }
         }
 
-        function onAddToFavorities() {
+        function onAddToFavorites() {
             let files = getFilesName();
             if (currentPath != "") {
                 for (var i = 0; i < files.length; i++) {
@@ -2440,11 +2443,11 @@
                 }
             }
             if (files.length != 0) {
-                addToGroup("favorities", files);
+                addToGroup("favorites", files);
             }
         }
 
-        function onRemoveFromFavorities() {
+        function onRemoveFromFavorites() {
             let files = getFilesName();
             if (currentPath != "") {
                 for (var i = 0; i < files.length; i++) {
@@ -2456,8 +2459,8 @@
             }
         }
 
-        function onGetFavorities() {
-            getGroup("favorities");
+        function onGetFavorites() {
+            getGroup("favorites");
         }
 
         function onCreateDirButton() {
@@ -2492,12 +2495,12 @@
             if (currentGroup) {
                 addFav = true;
             }
-            document.getElementById("addToFavorities").disabled = addFav;
+            document.getElementById("addToFavorites").disabled = addFav;
             let removeFav = startGoTo;
             if (!currentGroup) {
                 removeFav = true;
             }
-            document.getElementById("removeFromFavorities").disabled = removeFav;
+            document.getElementById("removeFromFavorites").disabled = removeFav;
             document.getElementById("target").disabled = !target.files;
         }
 
@@ -3012,11 +3015,11 @@
                     title="Rename">Rename</button>
                 <button disabled id="move" class="functionButton" onclick="onMoveButton();" title="Move">Move</button>
                 <button disabled id="copy" class="functionButton" onclick="onCopyButton();" title="Copy">Copy</button>
-                <button disabled id="addToFavorities" class="functionButton" onclick="onAddToFavorities();"
-                    title="Add to favorities">＋Favoritirs</button>
-                <button disabled id="removeFromFavorities" class="functionButton" onclick="onRemoveFromFavorities();"
-                    title="Remove from favorities">－Favoritirs</button>
-                <button disabled id="getFavorities" class="functionButton largeFont" onclick="onGetFavorities();"
+                <button disabled id="addToFavorites" class="functionButton" onclick="onAddToFavorites();"
+                    title="Add to favorites">＋Favoritirs</button>
+                <button disabled id="removeFromFavorites" class="functionButton" onclick="onRemoveFromFavorites();"
+                    title="Remove from favorites">－Favoritirs</button>
+                <button disabled id="getFavorites" class="functionButton largeFont" onclick="onGetFavorites();"
                     title="Get gavorities">&#9733;</button>
                 <button disabled id="createDir" class="functionButton" onclick="onCreateDirButton();"
                     title="New folder">New folder</button>
