@@ -63,6 +63,7 @@ namespace ProxyAPISupport
                         if (!CurrentHostFirstRead)
                         {
                             CurrentHostFirstRead = true;
+#if DEBUG                            
                             if (!SpinWait.SpinUntil(() => _CurrentHost != null, 2000))
                             {
                                 // ==================== WARNING: DefaultUrls is not setting at startup !!! ===================
@@ -77,6 +78,7 @@ namespace ProxyAPISupport
                                 // ===========================================================================================
                                 Debugger.Break();
                             }
+#endif
                         }
                     }
                 }
