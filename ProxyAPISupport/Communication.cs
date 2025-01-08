@@ -45,6 +45,7 @@ namespace ProxyAPISupport
             if (IsInitialized)
                 return false;
             entryPoint ??= IPAddress.Loopback.ToString();
+            //entryPoint ??= "pipe://router";
             Server = new CommunicationServer(privateKey, entryPoint);
             IsInitialized = true;
             return true;
