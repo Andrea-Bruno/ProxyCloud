@@ -31,8 +31,9 @@ namespace ProxyAPISupport
                 {
                     Communication.ConcurrentRequestForUser.ToList().ForEach(x => RealTimeClients += x.Key + " -> " + x.Value + "\r\n");
                 }
-
-                return "Is reachable = " + (host == null ? "undefined" : "[" + IsReachable().ToString()) + "]\r\n"
+                var isReachable = IsReachable(out IPAddress myIP, out string isRearchableNote);
+                return "Is reachable = " + (host == null ? "undefined" : "[" + isReachable.ToString()) + "] " + isRearchableNote + "\r\n"
+                     + "IP address = " + myIP + "\r\n"
                      + "Router entry point = " + CommunicationServer.Context?.EntryPoint.Host + "\r\n"
                      + "Is connected to router = " + CommunicationServer.Context?.IsConnected + "\r\n"
                      + "Host = " + host + "\r\n"
@@ -263,18 +264,20 @@ namespace ProxyAPISupport
         }
 
         private static ReachableStatus LastIsReachable;
+        private static IPAddress LastMyIp;
         private static DateTime LastIsReachableTime;
 
-        public static ReachableStatus IsReachable()
+        public static ReachableStatus IsReachable(out IPAddress myIp, out string description)
         {
+            description = null;
             if ((DateTime.UtcNow - LastIsReachableTime).TotalMinutes > 60)
             {
                 LastIsReachableTime = DateTime.UtcNow;
-                IPAddress myIp;
                 UriBuilder ub;
                 try
                 {
                     myIp = GetPublicIpAddress();
+                    LastMyIp = myIp;
                     ub = new UriBuilder(CurrentHost) { Path = "proxyinfo", Query = "ping=true" };
                     ub.Port = Communication.Port;
                     var hostIp = Dns.GetHostAddresses(ub.Host);
@@ -322,11 +325,13 @@ namespace ProxyAPISupport
                         return LastIsReachable;
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    description = ex.Message;
                     LastIsReachable = ReachableStatus.ConnectivityError;
                 }
             }
+            myIp = LastMyIp;
             return LastIsReachable;
         }
         static private bool CheckUri(Uri uri)
