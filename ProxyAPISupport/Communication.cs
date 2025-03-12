@@ -138,7 +138,7 @@ namespace ProxyAPISupport
         public static DateTime LastRequestSaturation { get; private set; }
         public static int RequestConcurent { get; private set; }
         public static int MaxRequestConcurent { get; set; } = 100;
-        internal static readonly Dictionary<ulong, int> ConcurrentRequestForUser = new();
+        internal static readonly Dictionary<ulong, int> ConcurrentRequestForUser = [];
 
         /// <summary>
         /// Send a command to the device 

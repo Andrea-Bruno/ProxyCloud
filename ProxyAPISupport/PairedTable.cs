@@ -39,7 +39,7 @@ namespace ProxyAPISupport
             return null;
         }
 
-        private readonly Dictionary<ulong, Couple> ReferenceIdToCorrespondingId = new();
+        private readonly Dictionary<ulong, Couple> ReferenceIdToCorrespondingId = [];
 
         public int Paired => ReferenceIdToCorrespondingId.Count;
 
