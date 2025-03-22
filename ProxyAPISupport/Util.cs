@@ -38,7 +38,7 @@ namespace ProxyAPISupport
                      + "Is connected to router = " + CommunicationServer.Context?.IsConnected + "\r\n"
                      + "Host = " + host + "\r\n"
                      + "ID = " + Communication.Server?.Id + "\r\n"
-                     + "PubblicKey = " + Communication.Server?.PubblicKey + "\r\n"
+                     + "PubblicKey = " + Communication.Server?.PublicKey + "\r\n"
                      + "Clouds connected = " + CommunicationServer.Context?.Contacts.Count + "\r\n"
                      + "Clients paired = " + Communication.ClientIdToChatId?.Paired + "\r\n"
                      + "Request counter = " + Communication.RequestToDeviceCounter + "\r\n"

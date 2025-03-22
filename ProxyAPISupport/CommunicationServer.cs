@@ -12,9 +12,9 @@ namespace ProxyAPISupport
         //private readonly string _entryPoint; // Used for release
         internal static Context Context;
         private readonly string PrivateKey;
-        public readonly string PubblicKey;
+        public readonly string PublicKey;
         public readonly ulong Id;
-        public static CommunicationServer Current;
+        public static CommunicationServer Current { get; set; }
         public CommunicationServer(string privateKey, string entryPoint, string networkName = "mainnet")
         {
             PrivateKey = privateKey;
@@ -24,7 +24,7 @@ namespace ProxyAPISupport
             Context = new Context(entryPoint, networkName, _multipleChatModes, PrivateKey, Modality.Server | Modality.SaveContacts);
             Context.OnContactEvent += OnContactEvent;
             Context.Contacts.OnContactReceived += OnContactReceived;
-            PubblicKey = Context.My.GetPublicKey();
+            PublicKey = Context.My.GetPublicKey();
             Id = Context.My.Id;
             //// Assign incoming push notifications to the appropriate notification project
             //EncryptedMessaging.Cloud.ReceiveCloudCommands.OnPost.Add(EncryptedMessaging.Cloud.Subject.PushNotification, OnClientRequest);

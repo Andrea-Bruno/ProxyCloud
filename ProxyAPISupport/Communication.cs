@@ -38,14 +38,14 @@ namespace ProxyAPISupport
         /// Start the proxy with encrypted protocols, which acts as a link between the clients and the cloud server. The proxy cannot see the data it transmits as the encryption is between client and server.
         /// </summary>
         /// <param name="privateKey">The key that identifies the proxy on the communications network connected to the router. Clouds to connect to the proxy must have the public key corresponding to this private key.</param>
-        /// <param name="entryPoint">The web or ip address of the router (default id "localhost"). The proxy will attempt to connect to the router via this address. The value of defaylt is localhost, in which case the proxy and the router must be running on the same hardware. If the router is remote, exposed to the internet, it is advisable to use a third level domain as an entry point so as not to be bound to the router IP (if the router changes IP, just update the DNS record to get the proxy again. connected to it).</param>
+        /// <param name="entryPoint">The web or IP address of the router (default id "localhost"). The proxy will attempt to connect to the router via this address. The value of default is localhost, in which case the proxy and the router must be running on the same hardware. If the router is remote, exposed to the Internet, it is advisable to use a third level domain as an entry point so as not to be bound to the router IP (if the router changes IP, just update the DNS record to get the proxy again. connected to it).</param>
         /// <returns>False if it has already been initialized, otherwise true</returns>
         public static bool Initialize(string privateKey, string entryPoint = null)
         {
             if (IsInitialized)
                 return false;
-            //entryPoint ??= IPAddress.Loopback.ToString();
-            entryPoint ??= "pipe://router";
+            entryPoint ??= IPAddress.Loopback.ToString();
+            // entryPoint ??= "pipe://router";
             Server = new CommunicationServer(privateKey, entryPoint);
             IsInitialized = true;
             return true;
