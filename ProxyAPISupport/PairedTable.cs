@@ -59,20 +59,18 @@ namespace ProxyAPISupport
             {
                 lock (ReferenceIdToCorrespondingId)
                 {
-                    using (var reader = File.OpenRead(PairedTableFile))
+                    using var reader = File.OpenRead(PairedTableFile);
+                    while (reader.Position < reader.Length)
                     {
-                        while (reader.Position < reader.Length)
-                        {
-                            var buffer = new byte[8];
-                            reader.Read(buffer, 0, 8);
-                            var referenceId = BitConverter.ToUInt64(buffer);
-                            reader.Read(buffer, 0, 8);
-                            var correspondingId = BitConverter.ToUInt64(buffer);
-                            reader.Read(buffer, 0, 8);
-                            var lastUsage = new DateTime(BitConverter.ToInt64(buffer));
-                            if ((DateTime.UtcNow - lastUsage).TotalDays < RemoveAfterInusageDays)
-                                ReferenceIdToCorrespondingId[referenceId] = new Couple { correspondingId = correspondingId, LastUsage = lastUsage };
-                        }
+                        var buffer = new byte[8];
+                        reader.Read(buffer, 0, 8);
+                        var referenceId = BitConverter.ToUInt64(buffer);
+                        reader.Read(buffer, 0, 8);
+                        var correspondingId = BitConverter.ToUInt64(buffer);
+                        reader.Read(buffer, 0, 8);
+                        var lastUsage = new DateTime(BitConverter.ToInt64(buffer));
+                        if ((DateTime.UtcNow - lastUsage).TotalDays < RemoveAfterInusageDays)
+                            ReferenceIdToCorrespondingId[referenceId] = new Couple { correspondingId = correspondingId, LastUsage = lastUsage };
                     }
                 }
             }
