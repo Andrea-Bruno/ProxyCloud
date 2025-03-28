@@ -15,13 +15,13 @@ namespace ProxyAPISupport
         public readonly string PublicKey;
         public readonly ulong Id;
         public static CommunicationServer Current { get; set; }
-        public CommunicationServer(string privateKey, string entryPoint, string networkName = "mainnet")
+        public CommunicationServer(string privateKey, string entryPoint, bool? connectivity = null, string networkName = "mainnet")
         {
             PrivateKey = privateKey;
             var platform = (int)Environment.OSVersion.Platform;
             var runtimePlatform = (platform == 4) || (platform == 6) || (platform == 128) ? Contact.RuntimePlatform.Unix : Contact.RuntimePlatform.Windows;
 
-            Context = new Context(entryPoint, networkName, _multipleChatModes, PrivateKey, Modality.Server | Modality.SaveContacts);
+            Context = new Context(entryPoint, networkName, _multipleChatModes, PrivateKey, Modality.Server | Modality.SaveContacts, connectivity: connectivity);
             Context.OnContactEvent += OnContactEvent;
             Context.Contacts.OnContactReceived += OnContactReceived;
             PublicKey = Context.My.GetPublicKey();
