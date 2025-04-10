@@ -112,7 +112,7 @@ namespace ProxyAPISupport
         }
 
         /// <summary>
-        /// If the uri in IP format is a known domain name (the default one), replace it with the domain in order to have a dynamic entry point (that can change ip)
+        /// If the Uri in IP format is a known domain name (the default one), replace it with the domain in order to have a dynamic entry point (that can change ip)
         /// </summary>
         /// <param name="uri"></param>
         private static void SetHostAndReplaceIp(Uri uri)
@@ -150,7 +150,7 @@ namespace ProxyAPISupport
         }
 
         /// <summary>
-        /// Get intranet IP
+        /// Get Intranet IP
         /// </summary>
         /// <returns>Intranet IP</returns>
         public static IPAddress GetLocalIPAddress()
