@@ -39,6 +39,7 @@ namespace ProxyAPISupport
         /// </summary>
         /// <param name="privateKey">The key that identifies the proxy on the communications network connected to the router. Clouds to connect to the proxy must have the public key corresponding to this private key.</param>
         /// <param name="entryPoint">The web or IP address of the router (default id "localhost"). The proxy will attempt to connect to the router via this address. The value of default is localhost, in which case the proxy and the router must be running on the same hardware. If the router is remote, exposed to the Internet, it is advisable to use a third level domain as an entry point so as not to be bound to the router IP (if the router changes IP, just update the DNS record to get the proxy again. connected to it).</param>
+        /// <param name="connectivity">If true, the proxy will try to connect to the router via the entry point. If false, it will not try to connect to the router. This parameter is ignored for pipe connection type</param>
         /// <returns>False if it has already been initialized, otherwise true</returns>
         public static bool Initialize(string privateKey, string entryPoint = null, bool? connectivity = null)
         {
@@ -46,7 +47,9 @@ namespace ProxyAPISupport
                 return false;
             //entryPoint ??= IPAddress.Loopback.ToString();
             entryPoint ??= "pipe://router";
-            Server = new CommunicationServer(privateKey, entryPoint, connectivity?? entryPoint.StartsWith("pipe"));
+            if (entryPoint.StartsWith("pipe"))
+                connectivity = true;
+            Server = new CommunicationServer(privateKey, entryPoint, connectivity);
             IsInitialized = true;
             return true;
         }
