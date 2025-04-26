@@ -45,7 +45,7 @@ namespace ProxyAPISupport
         {
             if (IsInitialized)
                 return false;
-            //entryPoint ??= IPAddress.Loopback.ToString();
+            // entryPoint ??= IPAddress.Loopback.ToString();
             entryPoint ??= "pipe://router";
             if (entryPoint.StartsWith("pipe"))
                 connectivity = true;
