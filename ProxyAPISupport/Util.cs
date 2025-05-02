@@ -54,6 +54,20 @@ namespace ProxyAPISupport
             }
         }
 
+        /// <summary>
+        /// Proxy status, if true then it is connected and reachable
+        /// </summary>
+        public static bool IsConnectedToRouter
+        {
+            get
+            {
+                if (Communication.IsInitialized)
+                {
+                    return CommunicationServer.Context?.IsConnected ?? false;
+                }
+                return false;
+            }
+        }
         private static Uri _CurrentHost;
         private static bool CurrentHostFirstRead;
         public static Uri CurrentHost
