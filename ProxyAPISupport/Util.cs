@@ -295,6 +295,7 @@ namespace ProxyAPISupport
         /// </summary>
         public enum ReachableStatus
         {
+            Undefined,
             Reachable,
             WrongDNS,
             NotSetDNS,
@@ -327,86 +328,91 @@ namespace ProxyAPISupport
         /// <returns>The reachability status</returns>
         public static ReachableStatus IsReachable(out IPAddress myIp, out string description)
         {
-            description = null;
-            myIp = LastMyIp; // Default assignment
-            ReachableStatus status = LastIsReachable; // Variable for the final return value
-            if ((DateTime.UtcNow - LastIsReachableTime).TotalMinutes > 60)
+            lock (_isReachableLock)
             {
-                LastIsReachableTime = DateTime.UtcNow;
-                try
+                description = null;
+                myIp = LastMyIp; // Default assignment
+                ReachableStatus status = LastIsReachable; // Variable for the final return value
+                if ((DateTime.UtcNow - LastIsReachableTime).TotalMinutes > 60)
                 {
-                    myIp = GetPublicIpAddress();
-                    LastMyIp = myIp;
-                    var ub = new UriBuilder(CurrentHost) { Path = "proxyinfo", Query = "ping=true", Port = Communication.Port };
-                    var hostIp = Dns.GetHostAddresses(ub.Host);
-                    if (!hostIp.Contains(myIp))
+                    LastIsReachableTime = DateTime.UtcNow;
+                    try
                     {
-                        status = ReachableStatus.WrongHostName;
-                    }
-                    else
-                    {
-                        var e = Dns.GetHostEntry(ub.Host);
-                        if (e.AddressList.Length == 0)
+                        myIp = GetPublicIpAddress();
+                        LastMyIp = myIp;
+                        var ub = new UriBuilder(CurrentHost) { Path = "proxyinfo", Query = "ping=true", Port = Communication.Port };
+                        var hostIp = Dns.GetHostAddresses(ub.Host);
+                        if (!hostIp.Contains(myIp))
                         {
-                            status = ReachableStatus.NotSetDNS;
+                            status = ReachableStatus.WrongHostName;
                         }
                         else
                         {
-                            var ip = e.AddressList[0];
-                            var pinger = new Ping();
-                            var reply = pinger.Send(ip);
-
-                            if (reply.Status != IPStatus.Success)
+                            var e = Dns.GetHostEntry(ub.Host);
+                            if (e.AddressList.Length == 0)
                             {
-                                status = ReachableStatus.UnderFirewall;
+                                status = ReachableStatus.NotSetDNS;
                             }
                             else
                             {
-                                try
+                                var ip = e.AddressList[0];
+                                var pinger = new Ping();
+                                var reply = pinger.Send(ip);
+
+                                if (reply.Status != IPStatus.Success)
                                 {
-                                    status = CheckUri(ub.Uri) ? ReachableStatus.Reachable : ReachableStatus.UnexpectedResponse;
+                                    status = ReachableStatus.UnderFirewall;
                                 }
-                                catch (Exception)
+                                else
                                 {
-                                    var isRunningOnWSL = File.Exists("/proc/sys/fs/binfmt_misc/WSLInterop");
-                                    if (isRunningOnWSL)
+                                    try
                                     {
-                                        status = ReachableStatus.WSLDoesNotAcceptRequestsFromInternet;
+                                        status = CheckUri(ub.Uri) ? ReachableStatus.Reachable : ReachableStatus.UnexpectedResponse;
                                     }
-                                    else
+                                    catch (Exception ex)
                                     {
-                                        try
+                                        Debug.WriteLine(ex.Message);
+                                        var isRunningOnWSL = File.Exists("/proc/sys/fs/binfmt_misc/WSLInterop");
+                                        if (isRunningOnWSL)
                                         {
-                                            if (ub.Host != myIp.ToString())
-                                            {
-                                                ub.Host = myIp.ToString();
-                                                status = CheckUri(ub.Uri) ? ReachableStatus.ReachableButWrongEntryPoint : ReachableStatus.UnexpectedResponse;
-                                            }
-                                            else
-                                            {
-                                                ub.Host = IPAddress.Loopback.ToString();
-                                                status = CheckUri(ub.Uri) ? ReachableStatus.UnderFirewall : ReachableStatus.UnexpectedResponse;
-                                            }
+                                            status = ReachableStatus.WSLDoesNotAcceptRequestsFromInternet;
                                         }
-                                        catch
+                                        else
                                         {
-                                            status = ReachableStatus.UnexpectedResponse;
+                                            try
+                                            {
+                                                if (ub.Host != myIp.ToString())
+                                                {
+                                                    ub.Host = myIp.ToString();
+                                                    status = CheckUri(ub.Uri) ? ReachableStatus.ReachableButWrongEntryPoint : ReachableStatus.UnexpectedResponse;
+                                                }
+                                                else
+                                                {
+                                                    ub.Host = IPAddress.Loopback.ToString();
+                                                    status = CheckUri(ub.Uri) ? ReachableStatus.UnderFirewall : ReachableStatus.UnexpectedResponse;
+                                                }
+                                            }
+                                            catch
+                                            {
+                                                status = ReachableStatus.UnexpectedResponse;
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        description = ex.Message;
+                        status = ReachableStatus.ConnectivityError;
+                    }
                 }
-                catch (Exception ex)
-                {
-                    description = ex.Message;
-                    status = ReachableStatus.ConnectivityError;
-                }
+                LastIsReachable = status; // Update the global status
+                return status;
             }
-            LastIsReachable = status; // Update the global status
-            return status;
         }
+        private static readonly object _isReachableLock = new object();
 
         /// <summary>
         /// Checks if the specified URI responds with "ok" within 1 second.
