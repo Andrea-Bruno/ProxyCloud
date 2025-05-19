@@ -7,13 +7,14 @@ using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using System.Threading;
 using Microsoft.AspNetCore.Http;
-using NBitcoin;
 
 namespace ProxyAPISupport
 {
+    /// <summary>
+    /// Utility class for proxy API support, providing network and diagnostic helpers.
+    /// </summary>
     public static class Util
     {
         /// <summary>
@@ -68,8 +69,13 @@ namespace ProxyAPISupport
                 return false;
             }
         }
+
         private static Uri _CurrentHost;
         private static bool CurrentHostFirstRead;
+
+        /// <summary>
+        /// Gets the current host URI for the proxy, or tries to determine it if not set.
+        /// </summary>
         public static Uri CurrentHost
         {
             get
@@ -81,7 +87,7 @@ namespace ProxyAPISupport
                         if (!CurrentHostFirstRead)
                         {
                             CurrentHostFirstRead = true;
-#if DEBUG                            
+#if DEBUG
                             if (!SpinWait.SpinUntil(() => _CurrentHost != null, 2000))
                             {
                                 // ==================== WARNING: DefaultUrls is not setting at startup !!! ===================
@@ -115,15 +121,16 @@ namespace ProxyAPISupport
         /// <summary>
         /// Set the domain and the proxy to make it available to clients (this information will be inserted in the QR code)
         /// </summary>
-        /// <param name="uri"></param>
+        /// <param name="uri">The URI to set as the current host</param>
         public static void SetCurrentHost(Uri uri)
         {
             SetHostAndReplaceIp(uri);
         }
+
         /// <summary>
         /// Set the domain and the proxy to make it available to clients (this information will be inserted in the QR code)
         /// </summary>
-        /// <param name="context"></param>
+        /// <param name="context">The HTTP context from which to extract the host</param>
         public static void SetCurrentHost(HttpContext context)
         {
             if (_CurrentHost == null)
@@ -133,7 +140,7 @@ namespace ProxyAPISupport
         /// <summary>
         /// If the Uri in IP format is a known domain name (the default one), replace it with the domain in order to have a dynamic entry point (that can change ip)
         /// </summary>
-        /// <param name="uri"></param>
+        /// <param name="uri">The URI to check and possibly replace the host</param>
         private static void SetHostAndReplaceIp(Uri uri)
         {
             // Check if is IP
@@ -152,6 +159,12 @@ namespace ProxyAPISupport
             }
         }
 
+        /// <summary>
+        /// Returns the domain if the IP matches the given domain, otherwise returns the IP as string.
+        /// </summary>
+        /// <param name="domain">The domain to check</param>
+        /// <param name="ip">The IP address to compare</param>
+        /// <returns>The domain if the IP matches, otherwise the IP as string</returns>
         static private string IpToDomain(string domain, IPAddress ip)
         {
             try
@@ -179,10 +192,11 @@ namespace ProxyAPISupport
         }
 
         private static IPAddress publicIp;
+
         /// <summary>
-        /// Get public IP
+        /// Get public IP address of the current machine.
         /// </summary>
-        /// <returns>Public IP</returns>
+        /// <returns>Public IP address</returns>
         public static IPAddress GetPublicIpAddress()
         {
             if (publicIp != null)
@@ -206,10 +220,11 @@ namespace ProxyAPISupport
             }
             return publicIp ?? IPAddress.None;
         }
+
         /// <summary>
-        /// Get all my IP
+        /// Get all IP addresses of the current machine.
         /// </summary>
-        /// <returns>List of IP</returns>
+        /// <returns>List of IP addresses</returns>
         public static List<IPAddress> GetMyIPs()
         {
             var host = Dns.GetHostEntry(Dns.GetHostName());
@@ -252,6 +267,11 @@ namespace ProxyAPISupport
             return false;
         }
 
+        /// <summary>
+        /// Checks if a TCP connection can be established to the specified URI.
+        /// </summary>
+        /// <param name="uri">The URI to check</param>
+        /// <returns>True if the connection is possible, otherwise false</returns>
         public static bool CheckConnection(Uri uri)
         {
             try
@@ -270,6 +290,9 @@ namespace ProxyAPISupport
             return false;
         }
 
+        /// <summary>
+        /// Status of the proxy reachability test.
+        /// </summary>
         public enum ReachableStatus
         {
             Reachable,
@@ -287,6 +310,21 @@ namespace ProxyAPISupport
         private static IPAddress LastMyIp;
         private static DateTime LastIsReachableTime;
 
+        /// <summary>
+        /// Checks if the proxy is reachable and returns the status.
+        /// </summary>
+        /// <returns>The reachability status</returns>
+        public static ReachableStatus IsReachable()
+        {
+            return IsReachable(out _, out _);
+        }
+
+        /// <summary>
+        /// Checks if the proxy is reachable and returns the status, the public IP, and a description.
+        /// </summary>
+        /// <param name="myIp">The public IP address found</param>
+        /// <param name="description">A description of the result or error</param>
+        /// <returns>The reachability status</returns>
         public static ReachableStatus IsReachable(out IPAddress myIp, out string description)
         {
             description = null;
@@ -370,6 +408,11 @@ namespace ProxyAPISupport
             return status;
         }
 
+        /// <summary>
+        /// Checks if the specified URI responds with "ok" within 1 second.
+        /// </summary>
+        /// <param name="uri">The URI to check</param>
+        /// <returns>True if the response is "ok", otherwise false</returns>
         static private bool CheckUri(Uri uri)
         {
             // Create an HttpClient with a timeout of 1 second
@@ -390,6 +433,7 @@ namespace ProxyAPISupport
         /// The latest self-diagnosis test result
         /// </summary>
         public static Exception LastSelfTestDataPostResult { get; private set; }
+
         /// <summary>
         /// Runs a self-diagnosis test to see if there are any problems using the proxy bees from the internet.
         /// It can throw an error indicating the problem you are having.
