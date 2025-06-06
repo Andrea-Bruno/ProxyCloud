@@ -7,7 +7,9 @@ using System.Net;
 using System.Net.Http;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Threading;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 
 namespace ProxyAPISupport
@@ -37,18 +39,18 @@ namespace ProxyAPISupport
                 }
                 var isReachable = IsReachable(out IPAddress myIP, out string isRearchableNote);
                 return "Is reachable = " + (host == null ? "undefined" : "[" + isReachable.ToString()) + "] " + isRearchableNote + "\r\n"
+                     + "Proxy EnrtyPoint = " + host + "\r\n"
                      + "IP address = " + myIP + "\r\n"
                      + "Router entry point = " + CommunicationServer.Context?.EntryPoint.Host + "\r\n"
                      + "Is connected to router = " + CommunicationServer.Context?.IsConnected + "\r\n"
-                     + "Host = " + host + "\r\n"
                      + "ID = " + Communication.Server?.Id + "\r\n"
                      + "PubblicKey = " + Communication.Server?.PublicKey + "\r\n"
                      + "Clouds connected = " + CommunicationServer.Context?.Contacts.Count + "\r\n"
                      + "Clients paired = " + Communication.ClientIdToChatId?.Paired + "\r\n"
                      + "Request counter = " + Communication.RequestToDeviceCounter + "\r\n"
                      + "Answer counter = " + Communication.AnswerFromDeviceCounter + "\r\n"
-                     + "Current concurent request = " + Communication.RequestConcurent + " (max " + Communication.MaxRequestConcurent + ")\r\n"
-                     + "Last request saturaion = " + (Communication.LastRequestSaturation == default ? "never (ok)" : Communication.LastRequestSaturation.ToString("G")) + "\r\n"
+                     + "Current concurrent request = " + Communication.RequestConcurent + " (max " + Communication.MaxRequestConcurent + ")\r\n"
+                     + "Last request saturation = " + (Communication.LastRequestSaturation == default ? "never (ok)" : Communication.LastRequestSaturation.ToString("G")) + "\r\n"
                      + "Last client over request = " + (Communication.LastClientOverRequest == default ? "never (ok)" : Communication.LastClientOverRequest.ToString("G")) + "\r\n"
                      + RealTimeClients
                      ;
@@ -155,6 +157,22 @@ namespace ProxyAPISupport
             }
             else
             {
+                var hostParts = uri.Host.Split('.');
+                if (hostParts.Length > 2 && !hostParts[0].Equals("proxy", StringComparison.OrdinalIgnoreCase))
+                {
+                    hostParts[0] = "proxy";
+                    var publicIp = GetPublicIpAddress();
+                    var proxyIPs = Dns.GetHostAddresses(string.Join(".", hostParts));
+                    if (proxyIPs.Contains(publicIp))
+                    {
+                        var newUri = new UriBuilder(uri)
+                        {
+                            Host = string.Join(".", hostParts)
+                        };
+                        _CurrentHost = newUri.Uri;
+                        return;
+                    }
+                }
                 _CurrentHost = uri;
             }
         }
@@ -278,7 +296,8 @@ namespace ProxyAPISupport
             {
                 var client = new TcpClient(uri.Host, uri.Port)
                 {
-                    LingerState = new LingerOption(true, 0)
+                    LingerState = new LingerOption(true, 0),
+                    NoDelay = true // Reduces latency
                 };
                 client.Close();
                 client.Dispose();
@@ -303,7 +322,11 @@ namespace ProxyAPISupport
             UnexpectedResponse,
             ConnectivityError,
             WrongHostName,
-            ReachableButWrongEntryPoint,
+            /// <summary>
+            /// The proxy is reachable but the hairpin NAT is not supported.
+            /// If the connection with the proxy is normal, you don't need to do anything else. Otherwise, try to see if the Urls configuration for the application blocks incoming calls with the domain of the entry point
+            /// </summary>
+            ReachableButHairpinNatNotSupported,
             WSLDoesNotAcceptRequestsFromInternet
         }
 
@@ -342,7 +365,7 @@ namespace ProxyAPISupport
                         LastMyIp = myIp;
                         var ub = new UriBuilder(CurrentHost) { Path = "proxyinfo", Query = "ping=true", Port = Communication.Port };
                         var hostIp = Dns.GetHostAddresses(ub.Host);
-                        if (!hostIp.Contains(myIp))
+                        if (!hostIp.Contains(myIp) && !Debugger.IsAttached)
                         {
                             status = ReachableStatus.WrongHostName;
                         }
@@ -372,7 +395,7 @@ namespace ProxyAPISupport
                                     catch (Exception ex)
                                     {
                                         Debug.WriteLine(ex.Message);
-                                        var isRunningOnWSL = File.Exists("/proc/sys/fs/binfmt_misc/WSLInterop");
+                                        var isRunningOnWSL = RuntimeInformation.IsOSPlatform(OSPlatform.Linux) && File.Exists("/proc/sys/fs/binfmt_misc/WSLInterop");
                                         if (isRunningOnWSL)
                                         {
                                             status = ReachableStatus.WSLDoesNotAcceptRequestsFromInternet;
@@ -384,7 +407,7 @@ namespace ProxyAPISupport
                                                 if (ub.Host != myIp.ToString())
                                                 {
                                                     ub.Host = myIp.ToString();
-                                                    status = CheckUri(ub.Uri) ? ReachableStatus.ReachableButWrongEntryPoint : ReachableStatus.UnexpectedResponse;
+                                                    status = CheckUri(ub.Uri) ? ReachableStatus.ReachableButHairpinNatNotSupported : ReachableStatus.UnexpectedResponse;
                                                 }
                                                 else
                                                 {
