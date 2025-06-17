@@ -44,7 +44,7 @@ namespace ProxyAPISupport
                 : Contact.RuntimePlatform.Windows;
 
             Context = new Context(entryPoint, networkName, _multipleChatModes, PrivateKey, Modality.Server | Modality.SaveContacts, connectivity: connectivity);
-            
+
             // This semaphore will be released when the connection is established
             var semaphore = WaitConnection == true ? new ManualResetEvent(false) : null;
             if (semaphore != null)
@@ -53,7 +53,7 @@ namespace ProxyAPISupport
                 {
                     if (connected)
                     {
-                        semaphore.Set();
+                        semaphore?.Set();
                         semaphore = null;
                     }
                 }

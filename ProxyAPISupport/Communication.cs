@@ -45,14 +45,31 @@ namespace ProxyAPISupport
         {
             if (IsInitialized)
                 return false;
-            // entryPoint ??= IPAddress.Loopback.ToString();
-            entryPoint ??= "pipe://router";
-            if (entryPoint.StartsWith("pipe"))
+
+            if (DafaultEntryLocalPoint == LocalEntryPoint.Pipe)
+            {
+                entryPoint ??= "pipe://router";
+            }
+            else
+            {
+                entryPoint ??= IPAddress.Loopback.ToString();
+            }
+            if (entryPoint.StartsWith("pipe:"))
                 connectivity = true;
             Server = new CommunicationServer(privateKey, entryPoint, connectivity);
             IsInitialized = true;
             return true;
         }
+
+        public static LocalEntryPoint DafaultEntryLocalPoint = LocalEntryPoint.LocalhostTcp;
+
+        public enum LocalEntryPoint
+        {
+            Pipe,
+            LocalhostTcp,
+            LocalhostHttp,
+        }
+
         public const int Port = 5050;
         public static bool IsInitialized { get; private set; }
 
