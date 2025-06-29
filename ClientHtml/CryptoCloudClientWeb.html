@@ -771,17 +771,60 @@
             }
         }
 
+        /**
+         * Resolves a domain name to its IP addresses (DNS A records).
+         * If the input is already an IP (IPv4 or IPv6), it returns it directly without a DNS query.
+         * Uses Cloudflare's public DNS API (1.1.1.1) for DNS resolution.
+         * 
+         * @param {string} url - The URL or domain to resolve (e.g., "example.com" or "https://192.168.1.1").
+         * @returns {Promise<string[]>} - A promise that resolves to an array of IP addresses.
+         * @throws {Error} - If DNS resolution fails or the domain has no A records.
+         */
         async function resolveDNS(url) {
-            if (url.indexOf("://") == -1) {
-                url = "http://" + url;
+            try {
+                // Extract the domain/hostname from the URL (removes protocol, www, path, etc.)
+                const domain = url.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+                
+                // Check if the domain is already a valid IPv4 address (e.g., "192.168.1.1")
+                const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+                
+                // Check if the domain is already a valid IPv6 address (e.g., "2001:0db8::1")
+                const ipv6Regex = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::([0-9a-fA-F]{1,4}:){0,6}[0-9a-fA-F]{1,4}$|^[0-9a-fA-F]{1,4}::([0-9a-fA-F]{1,4}:){0,5}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){1}:([0-9a-fA-F]{1,4}:){0,4}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){2}:([0-9a-fA-F]{1,4}:){0,3}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){3}:([0-9a-fA-F]{1,4}:){0,2}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){4}:([0-9a-fA-F]{1,4}:){0,1}[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){5}:[0-9a-fA-F]{1,4}$|^([0-9a-fA-F]{1,4}:){6}$/;
+                
+                if (ipv4Regex.test(domain)) {
+                    return [domain]; // Return the IPv4 address directly
+                }
+                
+                if (ipv6Regex.test(domain)) {
+                    return [domain]; // Return the IPv6 address directly
+                }
+                
+                // If not an IP, perform a DNS lookup via Cloudflare's API
+                const response = await fetch(`https://cloudflare-dns.com/dns-query?name=${domain}&type=A`, {
+                    headers: {
+                        'Accept': 'application/dns-json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`DNS query failed: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (data.Answer && data.Answer.length > 0) {
+                    // Extract all A record IPs from the DNS response
+                    const ips = data.Answer.filter(record => record.type === 1).map(record => record.data);
+                    return ips;
+                } else {
+                    throw new Error('No DNS A records found for the given domain');
+                }
+            } catch (error) {
+                console.error('DNS resolution error:', error.message);
+                throw error; // Re-throw to let the caller handle it
             }
-            let builder = new URL(url);
-            var host = builder.host;
-            let provider = "https://dns.google/resolve?name=" + host
-            let response = await fetch(provider);
-            let json = await response.json();
-            return json;
         }
+
 
         function alertBox(text) {
             document.getElementById("alertBox").innerText = text;
