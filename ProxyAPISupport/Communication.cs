@@ -128,7 +128,7 @@ namespace ProxyAPISupport
             var response = new CommandForClient
             {
                 Purpose = ResponseToPurpose,
-                EncriptedData = data,
+                EncryptedData = data,
             };
             if (contact.Session.TryGetValue("semaphore", out var semaphoreObject))
             {
@@ -282,9 +282,9 @@ namespace ProxyAPISupport
             /// </summary>
             public Purpose Purpose;
             /// <summary>
-            /// Encripted data that is part of the command. Once decrypted the data contains a command for the clinet (browser) and parameters that vary according to the command
+            /// Encrypted data that is part of the command. Once decrypted the data contains a command for the client (browser) and parameters that vary according to the command
             /// </summary>
-            public byte[] EncriptedData;
+            public byte[] EncryptedData;
         }
 
     }

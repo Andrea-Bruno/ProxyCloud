@@ -178,7 +178,7 @@ namespace ProxyAPISupport
             {
                 var response = new Communication.CommandForClient
                 {
-                    EncriptedData = test[0].HexToBytes()
+                    EncryptedData = test[0].HexToBytes()
                 };
                 await SetResponse(context, response);
                 return true;
@@ -188,8 +188,8 @@ namespace ProxyAPISupport
         private static async Task SetResponse(HttpContext context, Communication.CommandForClient response)
         {
             //context.Response.StatusCode = StatusCodes.Status200OK;
-            if (response != null && response.EncriptedData != null)
-                await context.Response.Body.WriteAsync(Encoding.ASCII.GetBytes(Convert.ToBase64String(response.EncriptedData)));
+            if (response != null && response.EncryptedData != null)
+                await context.Response.Body.WriteAsync(Encoding.ASCII.GetBytes(Convert.ToBase64String(response.EncryptedData)));
         }
 
     }
