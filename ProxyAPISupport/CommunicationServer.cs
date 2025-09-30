@@ -17,6 +17,9 @@ namespace ProxyAPISupport
         private readonly string PrivateKey;
         public readonly string PublicKey;
         public readonly ulong Id;
+        /// <summary>
+        /// Gets or sets the current instance of the <see cref="CommunicationServer"/>.
+        /// </summary>
         public static CommunicationServer Current { get; set; }
 
         /// <summary>
@@ -30,12 +33,7 @@ namespace ProxyAPISupport
         /// <param name="WaitConnection">
         /// Optional semaphore. If provided, the constructor will block until the connection is established.
         /// </param>
-        public CommunicationServer(
-            string privateKey,
-            string entryPoint,
-            bool? connectivity = null,
-            string networkName = "mainnet",
-            bool? WaitConnection = true)
+        public CommunicationServer(string privateKey, string entryPoint, bool? connectivity = null, string networkName = "mainnet", bool? WaitConnection = true)
         {
             PrivateKey = privateKey;
             var platform = (int)Environment.OSVersion.Platform;

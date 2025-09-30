@@ -1921,6 +1921,21 @@
             },
             SetFile: function (params) {
                 let nameFileAndChunk = bufferToString(params[0])
+                if (nameFileAndChunk == "507") {
+                    alertBox("Error: There is no space left on the device!");                    
+                    // Remove all progress bars and reset upload statuses
+                    for (let fileName in pendingFiles) {
+                            if (pendingFiles[fileName] && typeof pendingFiles[fileName].remove === "function") {
+                                pendingFiles[fileName].remove();
+                            }
+                            pendingFiles[fileName] = undefined;
+                            upload[fileName] = undefined;
+                            chunkLength[fileName] = undefined;
+                            chunkParts[fileName] = undefined;
+                            chunkRequest[fileName] = undefined;
+                        }
+                    return;
+                }
                 let nameFileAndChunkParts = nameFileAndChunk.split("\t");
                 let fullFileName = nameFileAndChunkParts[0];
                 let nextChunkNumber = parseInt(nameFileAndChunkParts[1]) + 1;
